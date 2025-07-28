@@ -82,5 +82,5 @@ int main() {
 
 OUTPUT: 
 
-Secret from testcase1.json: 5
-Secret from testcase2.json: 123456789
+Secret from testcase1.json: 3
+Secret from testcase2.json: 79836264055659
