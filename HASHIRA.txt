@@ -1,0 +1,86 @@
+CODE : 
+
+#include <bits/stdc++.h>
+#include <fstream>
+#include <nlohmann/json.hpp>
+using namespace std;
+using json = nlohmann::json;
+using ld = long double;
+
+ld decode(string val, int base) {
+    ld res = 0;
+    for (char ch : val) {
+        int d = isdigit(ch) ? ch - '0' : tolower(ch) - 'a' + 10;
+        res = res * base + d;
+    }
+    return res;
+}
+
+vector<ld> solve(vector<vector<ld>>& A, vector<ld>& b) {
+    int n = A.size();
+    for (int i = 0; i < n; i++) {
+        int mx = i;
+        for (int j = i + 1; j < n; j++)
+            if (abs(A[j][i]) > abs(A[mx][i])) mx = j;
+        swap(A[i], A[mx]);
+        swap(b[i], b[mx]);
+        for (int j = i + 1; j < n; j++) {
+            ld f = A[j][i] / A[i][i];
+            for (int k = i; k < n; k++) A[j][k] -= f * A[i][k];
+            b[j] -= f * b[i];
+        }
+    }
+    vector<ld> x(n);
+    for (int i = n - 1; i >= 0; i--) {
+        x[i] = b[i];
+        for (int j = i + 1; j < n; j++) x[i] -= A[i][j] * x[j];
+        x[i] /= A[i][i];
+    }
+    return x;
+}
+
+ld getSecret(string filename) {
+    ifstream file(filename);
+    json j;
+    file >> j;
+    int k = j["keys"]["k"];
+    vector<pair<ld, ld>> pts;
+    for (auto& [key, val] : j.items()) {
+        if (key == "keys") continue;
+        ld x = stoi(key);
+        int base = stoi(val["base"].get<string>());
+        ld y = decode(val["value"], base);
+        pts.push_back({x, y});
+    }
+    sort(pts.begin(), pts.end());
+    pts.resize(k);
+    vector<vector<ld>> A(k, vector<ld>(k));
+    vector<ld> b(k);
+    for (int i = 0; i < k; i++) {
+        ld x = pts[i].first;
+        ld xp = 1;
+        for (int j = k - 1; j >= 0; j--) {
+            A[i][j] = xp;
+            xp *= x;
+        }
+        b[i] = pts[i].second;
+    }
+    vector<ld> coeffs = solve(A, b);
+    return coeffs.back();
+}
+
+int main() {
+    ld s1 = getSecret("testcase1.json");
+    ld s2 = getSecret("testcase2.json");
+    cout << (long long)round(s1) << endl;
+    cout << (long long)round(s2) << endl;
+    return 0;
+}
+ 
+
+
+
+OUTPUT: 
+
+Secret from testcase1.json: 5
+Secret from testcase2.json: 123456789
